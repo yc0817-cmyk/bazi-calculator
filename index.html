@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>八字重量計算機</title>
+    <!-- 引入開源的農曆轉換套件，處理複雜的國曆轉農曆與天干地支 -->
+    <script src="https://fastly.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
+    <style>
+        :root {
+            --primary-gold: #d4af37;
+            --bg-dark: #12121a;
+            --card-bg: #1e1e2d;
+            --text-light: #e0e0e0;
+        }
+        body {
+            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        /* 廣告區塊樣式：上線前可將 dashed 邊框移除 */
+        .adsense-placeholder {
+            width: 100%;
+            min-height: 100px;
+            background-color: #2a2a3d;
+            border: 2px dashed #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            margin: 20px 0;
+            text-align: center;
+            border-radius: 8px;
+        }
+        .calculator-card {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            border-top: 4px solid var(--primary-gold);
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary-gold);
+            margin-top: 0;
+            font-size: 24px;
+            letter-spacing: 2px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #aaa;
+        }
+        input[type="date"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #333;
+            background-color: #2a2a3d;
+            color: white;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-gold);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s;
+            margin-top: 10px;
+        }
+        button:hover {
+            opacity: 0.85;
+        }
+        .result-box {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #262635;
+            border-radius: 8px;
+            text-align: center;
+            display: none; /* 預設隱藏，計算後顯示 */
+        }
+        .weight-number {
+            font-size: 32px;
+            color: var(--primary-gold);
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .detail-text {
+            font-size: 14px;
+            color: #aaa;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- 第一個 Google AdSense 廣告區塊 -->
+    <div class="adsense-placeholder">
+        <!-- 請將下方的文字替換為你的 Google AdSense 程式碼 -->
+        這裡放置 Google AdSense 頂部廣告碼
+    </div>
+
+    <div class="calculator-card">
+        <h1>八字稱骨計算機</h1>
+        
+        <div class="form-group">
+            <label for="birthDate">國曆出生日期</label>
+            <input type="date" id="birthDate" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="birthTime">出生時辰</label>
+            <select id="birthTime">
+                <option value="子">子時 (23:00 - 00:59)</option>
+                <option value="丑">丑時 (01:00 - 02:59)</option>
+                <option value="寅">寅時 (03:00 - 04:59)</option>
+                <option value="卯">卯時 (05:00 - 06:59)</option>
+                <option value="辰">辰時 (07:00 - 08:59)</option>
+                <option value="巳">巳時 (09:00 - 10:59)</option>
+                <option value="午">午時 (11:00 - 12:59)</option>
+                <option value="未">未時 (13:00 - 14:59)</option>
+                <option value="申">申時 (15:00 - 16:59)</option>
+                <option value="酉">酉時 (17:00 - 18:59)</option>
+                <option value="戌">戌時 (19:00 - 20:59)</option>
+                <option value="亥">亥時 (21:00 - 22:59)</option>
+            </select>
+        </div>
+
+        <button onclick="calculateWeight()">計算八字重量</button>
+
+        <!-- 結果顯示區塊 -->
+        <div id="resultBox" class="result-box">
+            <div style="font-size: 16px;">您的八字重量為</div>
+            <div id="weightResult" class="weight-number">--兩--錢</div>
+            <div id="detailResult" class="detail-text"></div>
+        </div>
+    </div>
+
+    <!-- 第二個 Google AdSense 廣告區塊 -->
+    <div class="adsense-placeholder">
+        <!-- 請將下方的文字替換為你的 Google AdSense 程式碼 -->
+        這裡放置 Google AdSense 底部廣告碼
+    </div>
+
+</div>
+
+<script>
+    // 袁天罡稱骨算命基礎權重資料庫 (單位皆為「錢」，10錢 = 1兩)
+    
+    // 60甲子年權重壓縮字串 (方便管理)
+    const yearDataStr = "甲子:12,乙丑:9,丙寅:6,丁卯:7,戊辰:12,己巳:5,庚午:9,辛未:8,壬申:7,癸酉:8,甲戌:15,乙亥:9,丙子:16,丁丑:8,戊寅:14,己卯:19,庚辰:12,辛巳:6,壬午:8,癸未:7,甲申:5,乙酉:15,丙戌:6,丁亥:16,戊子:15,己丑:7,庚寅:9,辛卯:12,壬辰:10,癸巳:7,甲午:15,乙未:6,丙申:5,丁酉:14,戊戌:14,己亥:9,庚子:7,辛丑:7,壬寅:9,癸卯:12,甲辰:8,乙巳:7,丙午:13,丁未:5,戊申:14,己酉:5,庚戌:9,辛亥:16,壬子:5,癸丑:7,甲寅:12,乙卯:8,丙辰:8,丁巳:6,戊午:19,己未:6,庚申:8,辛酉:16,壬戌:14,癸亥:7";
+    const yearWeights = Object.fromEntries(yearDataStr.split(',').map(s => { let p = s.split(':'); return [p[0], parseInt(p[1])]; }));
+
+    // 農曆月份權重 (1-12月)
+    const monthWeights = [6, 7, 18, 9, 5, 16, 9, 15, 18, 8, 9, 5];
+    
+    // 農曆日期權重 (初一到三十)
+    const dayWeights = [5, 10, 8, 15, 16, 15, 8, 16, 15, 16, 9, 17, 8, 17, 10, 8, 9, 18, 5, 15, 10, 9, 8, 9, 15, 18, 7, 8, 16, 6];
+    
+    // 時辰權重 (子丑寅卯辰巳午未申酉戌亥)
+    const hourWeights = { "子":16, "丑":6, "寅":7, "卯":10, "辰":9, "巳":16, "午":10, "未":8, "申":8, "酉":9, "戌":6, "亥":6 };
+
+    function calculateWeight() {
+        const dateInput = document.getElementById('birthDate').value;
+        const timeStr = document.getElementById('birthTime').value;
+
+        if (!dateInput) {
+            alert('請先選擇國曆出生日期！');
+            return;
+        }
+
+        // 解析日期
+        const dateObj = new Date(dateInput);
+        
+        // 使用 lunar.js 將國曆轉換為農曆
+        const lunarObj = Lunar.fromDate(dateObj);
+        
+        // 取得農曆年干支、月份、日期
+        const lunarYearGanZhi = lunarObj.getYearInGanZhi();
+        const lunarMonth = lunarObj.getMonth(); // 回傳 1-12
+        const lunarDay = lunarObj.getDay();     // 回傳 1-30
+
+        // 查找權重
+        const wYear = yearWeights[lunarYearGanZhi] || 0;
+        const wMonth = monthWeights[lunarMonth - 1] || 0;
+        const wDay = dayWeights[lunarDay - 1] || 0;
+        const wHour = hourWeights[timeStr] || 0;
+
+        // 計算總錢數
+        const totalQian = wYear + wMonth + wDay + wHour;
+        
+        // 換算成兩與錢
+        const liang = Math.floor(totalQian / 10);
+        const qian = totalQian % 10;
+
+        // 顯示結果
+        document.getElementById('resultBox').style.display = 'block';
+        document.getElementById('weightResult').innerText = `${liang} 兩 ${qian} 錢`;
+        
+        // 顯示明細幫助使用者確認
+        const detailStr = `
+            農曆轉換：${lunarYearGanZhi}年 ${lunarObj.getMonthInChinese()}月 ${lunarObj.getDayInChinese()} ${timeStr}時<br>
+            組成明細：年(${wYear}錢) + 月(${wMonth}錢) + 日(${wDay}錢) + 時(${wHour}錢)
+        `;
+        document.getElementById('detailResult').innerHTML = detailStr;
+    }
+</script>
+
+</body>
+</html>
