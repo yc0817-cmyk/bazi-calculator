@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>八字重量計算機</title>
-    <!-- 引入開源的農曆轉換套件，處理複雜的國曆轉農曆與天干地支 -->
+    <!-- 引入開源的農曆轉換套件 -->
     <script src="https://fastly.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
     <style>
         :root {
@@ -29,7 +29,7 @@
             max-width: 500px;
             margin: 0 auto;
         }
-        /* 廣告區塊樣式：上線前可將 dashed 邊框移除 */
+        /* 廣告區塊樣式 */
         .adsense-placeholder {
             width: 100%;
             min-height: 100px;
@@ -49,6 +49,7 @@
             border-radius: 12px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
             border-top: 4px solid var(--primary-gold);
+            position: relative;
         }
         h1 {
             text-align: center;
@@ -86,30 +87,109 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: opacity 0.3s;
+            transition: all 0.3s ease;
             margin-top: 10px;
         }
         button:hover {
             opacity: 0.85;
+            transform: translateY(-2px);
         }
+        button:disabled {
+            background-color: #555;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* 載入動畫區塊 */
+        .loading-box {
+            display: none;
+            text-align: center;
+            margin-top: 25px;
+            padding: 20px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(212, 175, 55, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-gold);
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 15px auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 結果顯示區塊 */
         .result-box {
             margin-top: 25px;
             padding: 20px;
             background-color: #262635;
             border-radius: 8px;
             text-align: center;
-            display: none; /* 預設隱藏，計算後顯示 */
+            display: none; 
+            animation: fadeIn 0.8s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .weight-number {
-            font-size: 32px;
+            font-size: 36px;
             color: var(--primary-gold);
             font-weight: bold;
             margin: 10px 0;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
         }
         .detail-text {
-            font-size: 14px;
+            font-size: 13px;
             color: #aaa;
             line-height: 1.6;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #444;
+        }
+        
+        /* 命理與手相解析區塊 */
+        .palmistry-box {
+            background-color: rgba(212, 175, 55, 0.1);
+            border-left: 4px solid var(--primary-gold);
+            padding: 15px;
+            margin: 15px 0;
+            text-align: left;
+            border-radius: 4px;
+        }
+        .palmistry-title {
+            color: var(--primary-gold);
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+        .palmistry-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #e0e0e0;
+        }
+
+        /* LINE 分享按鈕 */
+        .share-btn {
+            background-color: #06C755;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        .share-btn:hover {
+            background-color: #05b34c;
+        }
+        .line-icon {
+            font-weight: bold;
+            font-size: 18px;
         }
     </style>
 </head>
@@ -119,9 +199,7 @@
     
     <!-- 第一個 Google AdSense 廣告區塊 -->
     <div class="adsense-placeholder">
-        <!-- 請將下方的文字替換為你的 Google AdSense 程式碼 -->
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9160608688797088"
-     crossorigin="anonymous"></script>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9160608688797088" crossorigin="anonymous"></script>
     </div>
 
     <div class="calculator-card">
@@ -150,112 +228,156 @@
             </select>
         </div>
 
-        <button onclick="calculateWeight()">計算八字重量</button>
+        <button id="calcBtn" onclick="startCalculation()">計算八字重量</button>
+
+        <!-- 載入動畫區塊 -->
+        <div id="loadingBox" class="loading-box">
+            <div class="spinner"></div>
+            <div style="color: var(--primary-gold); letter-spacing: 2px;">命盤星象解析中...</div>
+        </div>
 
         <!-- 結果顯示區塊 -->
         <div id="resultBox" class="result-box">
             <div style="font-size: 16px;">您的八字重量為</div>
             <div id="weightResult" class="weight-number">--兩--錢</div>
             <div id="detailResult" class="detail-text"></div>
+            
+            <!-- 新增：命理與手相解析 -->
+            <div class="palmistry-box">
+                <div class="palmistry-title">✨ 命格與手相特徵解析</div>
+                <div id="palmistryText" class="palmistry-text"></div>
+            </div>
+
+            <!-- 新增：LINE 一鍵分享 -->
+            <button class="share-btn" onclick="shareToLine()">
+                <span class="line-icon">LINE</span> 將測驗結果分享給朋友
+            </button>
         </div>
     </div>
-<div style="max-width: 600px; margin: 40px auto; padding: 20px; color: #d1d5db; line-height: 1.8; text-align: left; font-family: sans-serif; background-color: #1f2937; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+
+    <!-- 科普介紹文字 -->
+    <div style="max-width: 600px; margin: 40px auto; padding: 20px; color: #d1d5db; line-height: 1.8; text-align: left; font-family: sans-serif; background-color: #1f2937; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+        <h2 style="color: #fbbf24; text-align: center; font-size: 1.5rem; margin-bottom: 20px;">關於八字五行與稱骨算命：揭開傳統命理的神秘面紗</h2>
+        <p>自古以來，人們對於生命的軌跡與未來的發展總是充滿好奇。在東方悠久的命理學中，「八字五行」與「稱骨算命」是最具代表性且流傳甚廣的兩種預測方式。它們不僅是前人的智慧結晶，更提供了一種從宇宙規律中認識自我的獨特視角。</p>
+        <h3 style="color: #fbbf24; font-size: 1.2rem; margin-top: 25px; margin-bottom: 10px;">八字五行：宇宙能量的縮影</h3>
+        <p>「八字」又稱四柱推命，是根據人出生的年、月、日、時，轉換為天干地支的組合，共計八個字。這八個字彷彿是每個人專屬的「生命密碼」。而「五行」——金、木、水、火、土，則是構成宇宙萬物的五種基本元素。</p>
+        <p>八字命理的核心，在於分析這五行元素在個人命盤中的相生相剋與強弱平衡。五行均衡者，一生相對平順；而五行的缺失或過旺，則暗示著性格特質與運勢起伏。透過八字五行，我們能更清晰地剖析命盤的結構，理解自己的潛能與特質，進而順勢而為。</p>
+        <h3 style="color: #fbbf24; font-size: 1.2rem; margin-top: 25px; margin-bottom: 10px;">稱骨算命：唐代大師的命理量化法</h3>
+        <p>「稱骨算命」相傳為唐代初年著名星相預測家<strong>袁天罡</strong>所創。這套系統將人的命運進行了一次巧妙的「量化」。具體做法是根據農曆出生的年、月、日、時，分別對應特定的「骨重」（以兩、錢為單位）。將這四個數值相加，得出的總重量即為個人的「骨重」。</p>
+        <p>一般而言，骨重越重，象徵著先天福報越深、一生越顯貴；骨重較輕者，則可能代表早年需要經歷較多磨練，屬於白手起家的格局。然而，命理學也強調「骨輕不見得貧賤，骨重也需後天努力」，稱骨歌訣提供的是一種人生軌跡的參考，而非絕對的宿命。</p>
+    </div>
     
-    <h2 style="color: #fbbf24; text-align: center; font-size: 1.5rem; margin-bottom: 20px;">關於八字五行與稱骨算命：揭開傳統命理的神秘面紗</h2>
-    
-    <p>自古以來，人們對於生命的軌跡與未來的發展總是充滿好奇。在東方悠久的命理學中，「八字五行」與「稱骨算命」是最具代表性且流傳甚廣的兩種預測方式。它們不僅是前人的智慧結晶，更提供了一種從宇宙規律中認識自我的獨特視角。</p>
-
-    <h3 style="color: #fbbf24; font-size: 1.2rem; margin-top: 25px; margin-bottom: 10px;">八字五行：宇宙能量的縮影</h3>
-    <p>「八字」又稱四柱推命，是根據人出生的年、月、日、時，轉換為天干地支的組合，共計八個字。這八個字彷彿是每個人專屬的「生命密碼」。而「五行」——金、木、水、火、土，則是構成宇宙萬物的五種基本元素。</p>
-    <p>八字命理的核心，在於分析這五行元素在個人命盤中的相生相剋與強弱平衡。五行均衡者，一生相對平順；而五行的缺失或過旺，則暗示著性格特質與運勢起伏。透過八字五行，我們能更清晰地剖析命盤的結構，理解自己的潛能與特質，進而順勢而為。</p>
-
-    <h3 style="color: #fbbf24; font-size: 1.2rem; margin-top: 25px; margin-bottom: 10px;">稱骨算命：唐代大師的命理量化法</h3>
-    <p>「稱骨算命」相傳為唐代初年著名星相預測家<strong>袁天罡</strong>所創。這套系統將人的命運進行了一次巧妙的「量化」。具體做法是根據農曆出生的年、月、日、時，分別對應特定的「骨重」（以兩、錢為單位）。將這四個數值相加，得出的總重量即為個人的「骨重」。</p>
-    <p>一般而言，骨重越重，象徵著先天福報越深、一生越顯貴；骨重較輕者，則可能代表早年需要經歷較多磨練，屬於白手起家的格局。然而，命理學也強調「骨輕不見得貧賤，骨重也需後天努力」，稱骨歌訣提供的是一種人生軌跡的參考，而非絕對的宿命。</p>
-
-    <h3 style="color: #fbbf24; font-size: 1.2rem; margin-top: 25px; margin-bottom: 10px;">結語：知命而不認命</h3>
-    <p>無論是精密的八字五行推演，還是直觀的稱骨算命，傳統命理的最終目的並非讓人消極接受命運，而是「知命」。了解自身的先天格局後，更重要的是透過後天的努力、品德的修養與正確的抉擇來改變人生。本站的計算結果，不妨將其視為人生旅途上的一份趣味參考與自我期許。</p>
-
-</div>
     <!-- 第二個 Google AdSense 廣告區塊 -->
     <div class="adsense-placeholder">
-        <!-- 請將下方的文字替換為你的 Google AdSense 程式碼 -->
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9160608688797088"
-     crossorigin="anonymous"></script>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9160608688797088" crossorigin="anonymous"></script>
+    </div>
+
+    <!-- 隱私權政策區塊 (移至 body 內正確位置) -->
+    <div style="max-width: 600px; margin: 0 auto 40px auto; padding: 20px; color: #9ca3af; line-height: 1.6; text-align: left; font-family: sans-serif; background-color: #111827; border-radius: 10px; font-size: 0.85rem;">
+        <h3 style="color: #d1d5db; font-size: 1rem; margin-bottom: 10px; text-align: center;">隱私權政策 (Privacy Policy)</h3>
+        <p>本網站非常重視您的個人隱私。為了讓您能夠安心使用本站提供的各項服務，特此向您說明本站的隱私權條款：</p>
+        <ul style="padding-left: 20px; margin-top: 8px;">
+            <li><strong>廣告與 Cookie 宣告：</strong>本站使用 Google AdSense 展示廣告。Google 等第三方廣告廠商會使用 Cookie 依據您先前造訪本網站或其他網站的紀錄來投放個人化廣告。</li>
+            <li><strong>資料隱私：</strong>本站為純工具頁面，您輸入的出生年月日及時辰僅用於網頁即時運算，本站不會在後端伺服器收集或儲存您的任何個人資料。</li>
+            <li><strong>停用 Cookie：</strong>您可以隨時造訪 <a href="https://www.google.com/settings/ads" target="_blank" style="color: #fbbf24; text-decoration: underline;">Google 廣告設定</a> 頁面，選擇停用個人化廣告。</li>
+        </ul>
     </div>
 
 </div>
 
 <script>
-    // 袁天罡稱骨算命基礎權重資料庫 (單位皆為「錢」，10錢 = 1兩)
-    
-    // 60甲子年權重壓縮字串 (方便管理)
+    // 袁天罡稱骨算命基礎權重資料庫
     const yearDataStr = "甲子:12,乙丑:9,丙寅:6,丁卯:7,戊辰:12,己巳:5,庚午:9,辛未:8,壬申:7,癸酉:8,甲戌:15,乙亥:9,丙子:16,丁丑:8,戊寅:14,己卯:19,庚辰:12,辛巳:6,壬午:8,癸未:7,甲申:5,乙酉:15,丙戌:6,丁亥:16,戊子:15,己丑:7,庚寅:9,辛卯:12,壬辰:10,癸巳:7,甲午:15,乙未:6,丙申:5,丁酉:14,戊戌:14,己亥:9,庚子:7,辛丑:7,壬寅:9,癸卯:12,甲辰:8,乙巳:7,丙午:13,丁未:5,戊申:14,己酉:5,庚戌:9,辛亥:16,壬子:5,癸丑:7,甲寅:12,乙卯:8,丙辰:8,丁巳:6,戊午:19,己未:6,庚申:8,辛酉:16,壬戌:14,癸亥:7";
     const yearWeights = Object.fromEntries(yearDataStr.split(',').map(s => { let p = s.split(':'); return [p[0], parseInt(p[1])]; }));
-
-    // 農曆月份權重 (1-12月)
     const monthWeights = [6, 7, 18, 9, 5, 16, 9, 15, 18, 8, 9, 5];
-    
-    // 農曆日期權重 (初一到三十)
     const dayWeights = [5, 10, 8, 15, 16, 15, 8, 16, 15, 16, 9, 17, 8, 17, 10, 8, 9, 18, 5, 15, 10, 9, 8, 9, 15, 18, 7, 8, 16, 6];
-    
-    // 時辰權重 (子丑寅卯辰巳午未申酉戌亥)
     const hourWeights = { "子":16, "丑":6, "寅":7, "卯":10, "辰":9, "巳":16, "午":10, "未":8, "申":8, "酉":9, "戌":6, "亥":6 };
 
-    function calculateWeight() {
-        const dateInput = document.getElementById('birthDate').value;
-        const timeStr = document.getElementById('birthTime').value;
+    // 全域變數供分享功能使用
+    let currentLiang = 0;
+    let currentQian = 0;
 
+    // 手相與命格對應資料庫
+    function getPalmistryAnalysis(totalQian) {
+        if (totalQian >= 50) {
+            return "【富貴格局】命格深厚。對照手相，通常此類格局者事業線（玉柱紋）深長直達中指，且掌心紅潤有肉，具備強大的財富掌管力與領導氣場。";
+        } else if (totalQian >= 40) {
+            return "【中等福厚】屬於中上命格。手相上多半感情線與智慧線清晰不雜亂，象徵中年後運勢穩健，能靠自身才華與人脈積累可觀財富。";
+        } else if (totalQian >= 30) {
+            return "【勤奮立業】白手起家格。手相特徵常見生命線強韌，初期或許事業線有分叉，但只要咬牙堅持，掌中會逐漸長出象徵偏財的『太陽線』。";
+        } else {
+            return "【堅韌不拔】大器晚成格。這類命格在手相上，智慧線通常較長且深，代表心思縝密、能吃苦。只要踏實前進，定能扭轉乾坤，綻放耀眼光芒。";
+        }
+    }
+
+    // 觸發運算與動畫
+    function startCalculation() {
+        const dateInput = document.getElementById('birthDate').value;
         if (!dateInput) {
             alert('請先選擇國曆出生日期！');
             return;
         }
 
-        // 解析日期
+        // 隱藏結果、按鈕反白、顯示載入動畫
+        document.getElementById('resultBox').style.display = 'none';
+        document.getElementById('calcBtn').disabled = true;
+        document.getElementById('calcBtn').innerText = '星象推演中...';
+        document.getElementById('loadingBox').style.display = 'block';
+
+        // 設定 2 秒過場動畫
+        setTimeout(() => {
+            calculateWeight();
+        }, 2000);
+    }
+
+    // 實際計算邏輯
+    function calculateWeight() {
+        const dateInput = document.getElementById('birthDate').value;
+        const timeStr = document.getElementById('birthTime').value;
         const dateObj = new Date(dateInput);
         
-        // 使用 lunar.js 將國曆轉換為農曆
+        // 農曆轉換
         const lunarObj = Lunar.fromDate(dateObj);
-        
-        // 取得農曆年干支、月份、日期
         const lunarYearGanZhi = lunarObj.getYearInGanZhi();
-        const lunarMonth = lunarObj.getMonth(); // 回傳 1-12
-        const lunarDay = lunarObj.getDay();     // 回傳 1-30
+        const lunarMonth = lunarObj.getMonth(); 
+        const lunarDay = lunarObj.getDay();     
 
-        // 查找權重
         const wYear = yearWeights[lunarYearGanZhi] || 0;
         const wMonth = monthWeights[lunarMonth - 1] || 0;
         const wDay = dayWeights[lunarDay - 1] || 0;
         const wHour = hourWeights[timeStr] || 0;
 
-        // 計算總錢數
         const totalQian = wYear + wMonth + wDay + wHour;
-        
-        // 換算成兩與錢
-        const liang = Math.floor(totalQian / 10);
-        const qian = totalQian % 10;
+        currentLiang = Math.floor(totalQian / 10);
+        currentQian = totalQian % 10;
+
+        // 隱藏動畫，恢復按鈕
+        document.getElementById('loadingBox').style.display = 'none';
+        document.getElementById('calcBtn').disabled = false;
+        document.getElementById('calcBtn').innerText = '重新計算';
 
         // 顯示結果
         document.getElementById('resultBox').style.display = 'block';
-        document.getElementById('weightResult').innerText = `${liang} 兩 ${qian} 錢`;
+        document.getElementById('weightResult').innerText = `${currentLiang} 兩 ${currentQian} 錢`;
         
-        // 顯示明細幫助使用者確認
         const detailStr = `
             農曆轉換：${lunarYearGanZhi}年 ${lunarObj.getMonthInChinese()}月 ${lunarObj.getDayInChinese()} ${timeStr}時<br>
             組成明細：年(${wYear}錢) + 月(${wMonth}錢) + 日(${wDay}錢) + 時(${wHour}錢)
         `;
         document.getElementById('detailResult').innerHTML = detailStr;
+
+        // 顯示命理與手相解析
+        document.getElementById('palmistryText').innerText = getPalmistryAnalysis(totalQian);
+    }
+
+    // LINE 一鍵分享功能
+    function shareToLine() {
+        const url = window.location.href.split('?')[0]; // 獲取當前乾淨的網址
+        const text = `我剛測了八字稱骨算命，我的命格竟然有 ${currentLiang}兩 ${currentQian}錢！這裡還有專屬的命格與手相解析，快來測測你的命有多重吧！\n\n👉 點擊馬上測驗：\n${url}`;
+        const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
+        window.open(lineUrl, '_blank');
     }
 </script>
 
 </body>
-    <div style="max-width: 600px; margin: 40px auto; padding: 20px; color: #9ca3af; line-height: 1.6; text-align: left; font-family: sans-serif; background-color: #111827; border-radius: 10px; font-size: 0.85rem;">
-    <h3 style="color: #d1d5db; font-size: 1rem; margin-bottom: 10px; text-align: center;">隱私權政策 (Privacy Policy)</h3>
-    <p>本網站非常重視您的個人隱私。為了讓您能夠安心使用本站提供的各項服務，特此向您說明本站的隱私權條款：</p>
-    <ul style="padding-left: 20px; margin-top: 8px;">
-        <li><strong>廣告與 Cookie 宣告：</strong>本站使用 Google AdSense 展示廣告。Google 等第三方廣告廠商會使用 Cookie 依據您先前造訪本網站或其他網站的紀錄來投放個人化廣告。</li>
-        <li><strong>資料隱私：</strong>本站為純工具頁面，您輸入的出生年月日及時辰僅用於網頁即時運算，本站不會在後端伺服器收集或儲存您的任何個人資料。</li>
-        <li><strong>停用 Cookie：</strong>您可以隨時造訪 <a href="https://www.google.com/settings/ads" target="_blank" style="color: #fbbf24; text-decoration: underline;">Google 廣告設定</a> 頁面，選擇停用個人化廣告。</li>
-    </ul>
-</div>
 </html>
