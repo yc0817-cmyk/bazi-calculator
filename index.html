@@ -3,19 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>八字重量計算機</title>
+    <title>八字重量計算機｜專業命理排盤</title>
     <!-- 引入開源的農曆轉換套件 -->
     <script src="https://fastly.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
+    <!-- 引入思源宋體，提升專業與古典質感 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-gold: #d4af37;
-            --bg-dark: #12121a;
-            --card-bg: #1e1e2d;
+            --light-gold: #f3e5ab;
+            --dark-gold: #aa8529;
+            --bg-dark: #0a0a0f;
+            --card-bg: linear-gradient(145deg, rgba(26, 26, 36, 0.9) 0%, rgba(18, 18, 26, 0.95) 100%);
             --text-light: #e0e0e0;
+            --text-muted: #9ca3af;
         }
         body {
             font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
-            background-color: var(--bg-dark);
+            /* 升級：加入 Unsplash 免版權星空背景，並疊加漸層遮罩確保文字清晰 */
+            background: radial-gradient(circle at center top, rgba(30, 30, 45, 0.8) 0%, rgba(10, 10, 15, 0.98) 100%),
+                        url('https://images.unsplash.com/photo-1464802686167-b939a6910659?q=80&w=1920&auto=format&fit=crop') center/cover fixed;
             color: var(--text-light);
             margin: 0;
             padding: 20px;
@@ -26,92 +33,136 @@
         }
         .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 520px;
             margin: 0 auto;
         }
+        
         /* 廣告區塊樣式 */
         .adsense-placeholder {
             width: 100%;
             min-height: 100px;
-            background-color: #2a2a3d;
-            border: 2px dashed #555;
+            background-color: rgba(42, 42, 61, 0.4);
+            border: 1px dashed #444;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #888;
+            color: #666;
             margin: 20px 0;
             text-align: center;
             border-radius: 8px;
+            font-size: 13px;
+            backdrop-filter: blur(5px);
         }
+
+        /* 主卡片設計（古典高級感 + 毛玻璃特效） */
         .calculator-card {
-            background-color: var(--card-bg);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-            border-top: 4px solid var(--primary-gold);
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            padding: 40px 30px;
+            border-radius: 4px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.2);
             position: relative;
         }
+        /* 古典角落裝飾 */
+        .calculator-card::before, .calculator-card::after {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border: 1px solid var(--primary-gold);
+            opacity: 0.6;
+        }
+        .calculator-card::before {
+            top: 15px; left: 15px;
+            border-right: none; border-bottom: none;
+        }
+        .calculator-card::after {
+            bottom: 15px; right: 15px;
+            border-left: none; border-top: none;
+        }
+
         h1 {
+            font-family: 'Noto Serif TC', serif;
             text-align: center;
             color: var(--primary-gold);
             margin-top: 0;
-            font-size: 24px;
-            letter-spacing: 2px;
+            margin-bottom: 30px;
+            font-size: 26px;
+            letter-spacing: 4px;
+            font-weight: 700;
         }
+        
+        /* 表單元素美化 */
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         label {
             display: block;
             margin-bottom: 8px;
             font-size: 14px;
-            color: #aaa;
+            color: var(--text-muted);
+            letter-spacing: 1px;
         }
         input[type="date"], select {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: 1px solid #333;
-            background-color: #2a2a3d;
+            background-color: rgba(0, 0, 0, 0.3);
             color: white;
-            border-radius: 6px;
+            border-radius: 4px;
             box-sizing: border-box;
             font-size: 16px;
+            transition: all 0.3s ease;
+            font-family: inherit;
         }
+        /* 輸入框發光特效 */
+        input[type="date"]:focus, select:focus {
+            border-color: var(--primary-gold);
+            outline: none;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* 專業金屬感按鈕 */
         button {
             width: 100%;
-            padding: 14px;
-            background-color: var(--primary-gold);
-            color: #000;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--light-gold) 0%, var(--primary-gold) 50%, var(--dark-gold) 100%);
+            color: #111;
             border: none;
-            border-radius: 6px;
+            border-radius: 4px;
             font-size: 16px;
             font-weight: bold;
+            letter-spacing: 2px;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 10px;
+            margin-top: 15px;
+            font-family: 'Noto Serif TC', serif;
         }
         button:hover {
-            opacity: 0.85;
             transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
         }
         button:disabled {
-            background-color: #555;
+            background: #444;
             color: #888;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
         
         /* 載入動畫區塊 */
         .loading-box {
             display: none;
             text-align: center;
-            margin-top: 25px;
+            margin-top: 30px;
             padding: 20px;
         }
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(212, 175, 55, 0.3);
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(212, 175, 55, 0.2);
             border-radius: 50%;
             border-top-color: var(--primary-gold);
             animation: spin 1s ease-in-out infinite;
@@ -123,10 +174,11 @@
 
         /* 結果顯示區塊 */
         .result-box {
-            margin-top: 25px;
-            padding: 20px;
-            background-color: #262635;
-            border-radius: 8px;
+            margin-top: 30px;
+            padding: 25px 20px;
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
             text-align: center;
             display: none; 
             animation: fadeIn 0.8s ease;
@@ -136,60 +188,99 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .weight-number {
-            font-size: 36px;
+            font-family: 'Noto Serif TC', serif;
+            font-size: 42px;
             color: var(--primary-gold);
-            font-weight: bold;
-            margin: 10px 0;
-            text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+            font-weight: 700;
+            margin: 15px 0;
+            text-shadow: 0 2px 15px rgba(212, 175, 55, 0.4);
+            letter-spacing: 2px;
         }
         .detail-text {
             font-size: 13px;
-            color: #aaa;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px dashed #444;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         /* 命理與手相解析區塊 */
         .palmistry-box {
-            background-color: rgba(212, 175, 55, 0.1);
-            border-left: 4px solid var(--primary-gold);
-            padding: 15px;
-            margin: 15px 0;
+            background: linear-gradient(to right, rgba(212, 175, 55, 0.08), rgba(0,0,0,0));
+            border-left: 3px solid var(--primary-gold);
+            padding: 15px 20px;
+            margin: 20px 0;
             text-align: left;
-            border-radius: 4px;
         }
         .palmistry-title {
             color: var(--primary-gold);
             font-weight: bold;
             font-size: 15px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
+            letter-spacing: 1px;
         }
         .palmistry-text {
             font-size: 14px;
-            line-height: 1.7;
-            color: #e0e0e0;
+            line-height: 1.8;
+            color: #d1d5db;
         }
 
         /* LINE 分享按鈕 */
         .share-btn {
-            background-color: #06C755;
+            background: #06C755;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            margin-top: 15px;
+            margin-top: 20px;
+            font-family: "Microsoft JhengHei", sans-serif;
+            letter-spacing: 1px;
+            padding: 12px;
         }
         .share-btn:hover {
-            background-color: #05b34c;
+            background: #05b34c;
+            box-shadow: 0 4px 12px rgba(6, 199, 85, 0.3);
         }
-        .line-icon {
-            font-weight: bold;
-            font-size: 18px;
+        
+        /* 文章與隱私權區塊微調 */
+        .article-box {
+            max-width: 600px; 
+            margin: 40px auto; 
+            padding: 30px; 
+            color: #bbb; 
+            line-height: 1.9; 
+            text-align: left; 
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 4px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+        }
+        .article-box h2, .article-box h3 {
+            font-family: 'Noto Serif TC', serif;
+            color: var(--light-gold);
+        }
+        /* 升級：專屬橫幅圖片外框設定 */
+        .banner-image {
+            width: 100%; 
+            height: 180px; 
+            margin-bottom: 25px; 
+            border-radius: 4px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .banner-image img {
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            opacity: 0.85; 
+            /* 讓圖片色調更融合深色背景 */
+            mix-blend-mode: luminosity; 
         }
     </style>
 </head>
@@ -228,41 +319,48 @@
             </select>
         </div>
 
-        <button id="calcBtn" onclick="startCalculation()">計算八字重量</button>
+        <button id="calcBtn" onclick="startCalculation()">開始精準排盤</button>
 
         <!-- 載入動畫區塊 -->
         <div id="loadingBox" class="loading-box">
             <div class="spinner"></div>
-            <div style="color: var(--primary-gold); letter-spacing: 2px;">命盤星象解析中...</div>
+            <div style="color: var(--primary-gold); letter-spacing: 2px; font-family: 'Noto Serif TC', serif;">命盤星象解析中...</div>
         </div>
 
         <!-- 結果顯示區塊 -->
         <div id="resultBox" class="result-box">
-            <div style="font-size: 16px;">您的八字重量為</div>
+            <div style="font-size: 15px; letter-spacing: 1px; color: var(--text-muted);">您的先天八字骨重為</div>
             <div id="weightResult" class="weight-number">--兩--錢</div>
             <div id="detailResult" class="detail-text"></div>
             
-            <!-- 新增：命理與手相解析 -->
+            <!-- 命理與手相解析 -->
             <div class="palmistry-box">
                 <div class="palmistry-title">✨ 命格與手相特徵解析</div>
                 <div id="palmistryText" class="palmistry-text"></div>
             </div>
 
-            <!-- 新增：LINE 一鍵分享 -->
+            <!-- LINE 一鍵分享 -->
             <button class="share-btn" onclick="shareToLine()">
-                <span class="line-icon">LINE</span> 將測驗結果分享給朋友
+                分享測驗結果
             </button>
         </div>
     </div>
 
     <!-- 科普介紹文字 -->
-    <div style="max-width: 600px; margin: 40px auto; padding: 20px; color: #d1d5db; line-height: 1.8; text-align: left; font-family: sans-serif; background-color: #1f2937; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-        <h2 style="color: #fbbf24; text-align: center; font-size: 1.5rem; margin-bottom: 20px;">關於八字五行與稱骨算命：揭開傳統命理的神秘面紗</h2>
+    <div class="article-box">
+        <!-- 升級：免版權高質感黑金流體視覺橫幅 (Unsplash) -->
+        <div class="banner-image">
+            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop" alt="命理與星空意象">
+        </div>
+        
+        <h2 style="text-align: center; font-size: 1.5rem; margin-bottom: 24px;">關於八字五行與稱骨算命<br><span style="font-size: 1rem; color: var(--text-muted);">揭開傳統命理的神秘面紗</span></h2>
         <p>自古以來，人們對於生命的軌跡與未來的發展總是充滿好奇。在東方悠久的命理學中，「八字五行」與「稱骨算命」是最具代表性且流傳甚廣的兩種預測方式。它們不僅是前人的智慧結晶，更提供了一種從宇宙規律中認識自我的獨特視角。</p>
-        <h3 style="color: #fbbf24; font-size: 1.2rem; margin-top: 25px; margin-bottom: 10px;">八字五行：宇宙能量的縮影</h3>
+        
+        <h3 style="font-size: 1.2rem; margin-top: 30px; margin-bottom: 12px;">八字五行：宇宙能量的縮影</h3>
         <p>「八字」又稱四柱推命，是根據人出生的年、月、日、時，轉換為天干地支的組合，共計八個字。這八個字彷彿是每個人專屬的「生命密碼」。而「五行」——金、木、水、火、土，則是構成宇宙萬物的五種基本元素。</p>
         <p>八字命理的核心，在於分析這五行元素在個人命盤中的相生相剋與強弱平衡。五行均衡者，一生相對平順；而五行的缺失或過旺，則暗示著性格特質與運勢起伏。透過八字五行，我們能更清晰地剖析命盤的結構，理解自己的潛能與特質，進而順勢而為。</p>
-        <h3 style="color: #fbbf24; font-size: 1.2rem; margin-top: 25px; margin-bottom: 10px;">稱骨算命：唐代大師的命理量化法</h3>
+        
+        <h3 style="font-size: 1.2rem; margin-top: 30px; margin-bottom: 12px;">稱骨算命：唐代大師的命理量化法</h3>
         <p>「稱骨算命」相傳為唐代初年著名星相預測家<strong>袁天罡</strong>所創。這套系統將人的命運進行了一次巧妙的「量化」。具體做法是根據農曆出生的年、月、日、時，分別對應特定的「骨重」（以兩、錢為單位）。將這四個數值相加，得出的總重量即為個人的「骨重」。</p>
         <p>一般而言，骨重越重，象徵著先天福報越深、一生越顯貴；骨重較輕者，則可能代表早年需要經歷較多磨練，屬於白手起家的格局。然而，命理學也強調「骨輕不見得貧賤，骨重也需後天努力」，稱骨歌訣提供的是一種人生軌跡的參考，而非絕對的宿命。</p>
     </div>
@@ -272,14 +370,14 @@
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9160608688797088" crossorigin="anonymous"></script>
     </div>
 
-    <!-- 隱私權政策區塊 (移至 body 內正確位置) -->
-    <div style="max-width: 600px; margin: 0 auto 40px auto; padding: 20px; color: #9ca3af; line-height: 1.6; text-align: left; font-family: sans-serif; background-color: #111827; border-radius: 10px; font-size: 0.85rem;">
-        <h3 style="color: #d1d5db; font-size: 1rem; margin-bottom: 10px; text-align: center;">隱私權政策 (Privacy Policy)</h3>
+    <!-- 隱私權政策區塊 -->
+    <div style="max-width: 600px; margin: 0 auto 40px auto; padding: 20px; color: #777; line-height: 1.6; text-align: left; font-size: 0.85rem;">
+        <h3 style="color: #999; font-size: 1rem; margin-bottom: 10px; text-align: center; font-family: 'Noto Serif TC', serif;">隱私權政策 (Privacy Policy)</h3>
         <p>本網站非常重視您的個人隱私。為了讓您能夠安心使用本站提供的各項服務，特此向您說明本站的隱私權條款：</p>
         <ul style="padding-left: 20px; margin-top: 8px;">
             <li><strong>廣告與 Cookie 宣告：</strong>本站使用 Google AdSense 展示廣告。Google 等第三方廣告廠商會使用 Cookie 依據您先前造訪本網站或其他網站的紀錄來投放個人化廣告。</li>
             <li><strong>資料隱私：</strong>本站為純工具頁面，您輸入的出生年月日及時辰僅用於網頁即時運算，本站不會在後端伺服器收集或儲存您的任何個人資料。</li>
-            <li><strong>停用 Cookie：</strong>您可以隨時造訪 <a href="https://www.google.com/settings/ads" target="_blank" style="color: #fbbf24; text-decoration: underline;">Google 廣告設定</a> 頁面，選擇停用個人化廣告。</li>
+            <li><strong>停用 Cookie：</strong>您可以隨時造訪 <a href="https://www.google.com/settings/ads" target="_blank" style="color: var(--primary-gold); text-decoration: none; border-bottom: 1px solid var(--primary-gold);">Google 廣告設定</a> 頁面，選擇停用個人化廣告。</li>
         </ul>
     </div>
 
@@ -354,7 +452,7 @@
         // 隱藏動畫，恢復按鈕
         document.getElementById('loadingBox').style.display = 'none';
         document.getElementById('calcBtn').disabled = false;
-        document.getElementById('calcBtn').innerText = '重新計算';
+        document.getElementById('calcBtn').innerText = '重新精準排盤';
 
         // 顯示結果
         document.getElementById('resultBox').style.display = 'block';
@@ -372,7 +470,7 @@
 
     // LINE 一鍵分享功能
     function shareToLine() {
-        const url = window.location.href.split('?')[0]; // 獲取當前乾淨的網址
+        const url = window.location.href.split('?')[0]; 
         const text = `我剛測了八字稱骨算命，我的命格竟然有 ${currentLiang}兩 ${currentQian}錢！這裡還有專屬的命格與手相解析，快來測測你的命有多重吧！\n\n👉 點擊馬上測驗：\n${url}`;
         const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
         window.open(lineUrl, '_blank');
